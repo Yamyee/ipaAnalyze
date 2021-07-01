@@ -158,16 +158,20 @@ def analyze():
     print('写入文件')
 
     
-    with open('size.txt','w+') as f:
+    with open('size.md','w+') as f:
         txt = ''
         total = 0
+        f.write('| 包名(.a) | 大小(KB) |')
+        f.write('\n')
+        f.write('| :------: | - |')
+        f.write('\n')
         for key,obj_file in obj_files.items():
             size = obj_file.total_size()
             total += size
-            txt = '{}\t\t\t\t\t\t{} kb'.format(obj_file.name,str(size))
+            txt = '| {} | {} |'.format(obj_file.name,str(size))
             f.write(txt)
             f.write('\n')
-        txt = '{}\t\t\t\t\t\t{} kb'.format('total',str(total))
+        txt = '| {} | {} |'.format('total',str(total))
         f.write(txt)
 if __name__ == '__main__':
     if sys.argv[-1] == '-h':
