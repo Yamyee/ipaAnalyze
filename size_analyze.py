@@ -3,7 +3,7 @@
 import sys
 import os
 import re
-
+import json
 #简陋地计算ipa大小
 #依赖python2.x 
 #用法python2 size_analyze.py linkmap(linkmap完整路径)
@@ -95,6 +95,7 @@ def analyze():
 
     file_lines,size_lines = get_file_line(contents)
     #分析 每个文件的序号
+    print_color('读取序号',green)
     for line in file_lines:
         arr = re.findall(match2,line)
         if len(arr) > 0:
@@ -113,6 +114,7 @@ def analyze():
             print(e)
 
     #计算每个序号对应文件的大小
+    print_color('读取文件大小',green)
     for line in size_lines:
 
         if line.startswith('0x') == False:
@@ -147,7 +149,7 @@ def analyze():
     obj_files = {}
 
     #计算每个.a 文件的大小
-    
+    print_color('计算.a大小',green)
     for key,f in files.items():
         if f.obj not in obj_files.keys():
             obj_files[f.obj] = ObjectFile(f.obj,[])
@@ -155,9 +157,8 @@ def analyze():
         fs = obj_files[f.obj].files
         fs.append(f)
         obj_files[f.obj].files = fs
-    print('写入文件')
 
-    
+    print_color('写入markdown文件',green)
     with open('size.md','w+') as f:
         txt = ''
         total = 0
@@ -173,6 +174,22 @@ def analyze():
             f.write('\n')
         txt = '| {} | {} |'.format('total',str(total))
         f.write(txt)
+
+    load_json = {}
+    print_color('写入json文件',green)
+    for name,obj_file in obj_files.items():
+        dic = {}
+        for f in obj_file.files:
+            dic[f.name] = str(f.size / 1024.0)
+        dic['totalSize'] = str(obj_file.total_size())
+        load_json[name] = dic
+        
+    
+    with open('size_detail.json','w+') as f:
+        f.write(json.dumps(load_json, indent=2, ensure_ascii=False))
+
+    print_color('完成！！！！',green)
+
 if __name__ == '__main__':
     if sys.argv[-1] == '-h':
         print_color('用法：python2 size_analyze.py linkmap(linkmap完整路径)',green)
