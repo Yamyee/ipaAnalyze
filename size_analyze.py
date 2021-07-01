@@ -163,7 +163,7 @@ def analyze():
         total = 0
         f.write('| 包名(.a) | 大小(KB) |')
         f.write('\n')
-        f.write('| :------: | - |')
+        f.write('| :------: | :------: |')
         f.write('\n')
         for key,obj_file in obj_files.items():
             size = obj_file.total_size()
