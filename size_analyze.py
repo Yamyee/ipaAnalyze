@@ -99,10 +99,17 @@ def analyze(path):
     #math[]
     match2 = re.compile(r'\[([^\[\]]+)\]', re.S)
 
+    count_libs = []
+
+    with open('copylibs.txt','r') as f:
+        lines = f.readlines()
+        for line in lines:
+            count_libs.append(line.replace('\n',''))
+
     file_lines,size_lines = get_file_line(contents)
+    last = ''
     #分析 每个文件的序号
     print_color('读取序号',green)
-
     for line in file_lines:
         arr = re.findall(match2,line)
         if len(arr) > 0:
@@ -110,10 +117,23 @@ def analyze(path):
         part = line.split('/')[-1]
         if part == '' or part == None or '.o)' not in part:
             continue
-        part = part.replace('\n','')
-        obj = part.split('(')[0].replace('.a','')
         try:
-            fileName = re.findall(match1,part)[0].replace('.o','').replace('.a','')
+            arr = line.split('/Pods/')
+            if len(arr) != 2:
+                part = line.split('/Release-iphoneos/')[1]
+            else:
+                part = arr[1]
+
+            obj = part.split('/')[0] 
+                        
+            if obj != last:
+                print(obj)
+            last = obj
+
+            if obj not in count_libs:
+                continue
+
+            fileName = re.findall(match1,part)[0].replace('.o','')
             f = File(fileName,number,obj=obj)
             files[number] = f
         except Exception as e:
@@ -133,7 +153,6 @@ def analyze(path):
         fileNum = numStrs[0].replace(' ','').replace(' ','').replace('\t','')
         
         if fileNum not in files.keys():
-            # print('{} not in files'.format(fileNum))
             continue
 
         arr = line.split('\t')
@@ -144,7 +163,6 @@ def analyze(path):
             s = arr[1]
             if s == '' or s == ' ':
                 continue
-            # print('fileNum = {} size = {}'.format(fileNum,s))
 
             size = files[fileNum].size
             size += int(s,16)
@@ -157,14 +175,18 @@ def analyze(path):
 
     #计算每个.a 文件的大小
     print_color('计算.a大小',green)
+    print_color('收集.o文件{}个'.format(len(files)),green)
+    size = 0
     for key,f in files.items():
         if f.obj not in obj_files.keys():
             obj_files[f.obj] = ObjectFile(f.obj,[])
-        
+        size += f.size
         fs = obj_files[f.obj].files
         fs.append(f)
         obj_files[f.obj].files = fs
 
+    print_color('收集.a文件{}个'.format(str(len(obj_files))),green)
+    print_color('总大小 {} KB'.format(str(size/1024.0)),green)
     print_color('写入markdown文件',green)
     with open('size.md','w+') as f:
         txt = ''
