@@ -53,15 +53,21 @@ def get_file_line(contents):
     index=0
     file_lines=[]
     size_lines=[]
+    start=False
     for i in range(len(contents)):
         index = i
         line = contents[i]
         if '# Sections:' in line:
             break
-        if '/opt/data/' in line:
-            file_lines.append(line)
+        if '[  1] dtrace' in line:
+            start = True
+            continue
+        if start == False:
+            continue
 
-    start=False
+        file_lines.append(line)
+            
+    start = False
     for i in range(index,len(contents)):
         line = contents[i]
         if 'Dead Stripped Symbols' in line:
@@ -74,8 +80,8 @@ def get_file_line(contents):
         size_lines.append(line)
     return (file_lines,size_lines)  
 
-def analyze():
-    path = sys.argv[-1]
+def analyze(path):
+    
     if path == None:
         print_color('请输入linkmap文件路径')
         return
@@ -96,6 +102,7 @@ def analyze():
     file_lines,size_lines = get_file_line(contents)
     #分析 每个文件的序号
     print_color('读取序号',green)
+
     for line in file_lines:
         arr = re.findall(match2,line)
         if len(arr) > 0:
@@ -194,7 +201,7 @@ if __name__ == '__main__':
     if sys.argv[-1] == '-h':
         print_color('用法：python2 size_analyze.py linkmap(linkmap完整路径)',green)
     else:
-        analyze()
+        analyze(sys.argv[-1])
 
     
 
